@@ -2,6 +2,7 @@ use balatro_rs::action::Action;
 use balatro_rs::card::Card;
 use balatro_rs::config::Config;
 use balatro_rs::game::Game;
+use balatro_rs::hand::SelectHand;
 use balatro_rs::joker::Jokers;
 use balatro_rs::replay_log::{self, ReplayMove, ReplaySource, ReplayWriter};
 use balatro_rs::stage::{End, Stage};
@@ -10,6 +11,27 @@ use pyo3::exceptions::{PyIOError, PyValueError};
 use pyo3::prelude::*;
 use std::fs::{File, OpenOptions};
 use std::io::BufWriter;
+
+// Same order as Python's itertools.combinations.
+fn combinations(n: usize, k: usize) -> Vec<Vec<usize>> {
+    let mut out = Vec::new();
+    let mut idx: Vec<usize> = (0..k).collect();
+    loop {
+        out.push(idx.clone());
+        let mut i = k;
+        while i > 0 && idx[i - 1] == n - k + i - 1 {
+            i -= 1;
+        }
+        if i == 0 {
+            break;
+        }
+        idx[i - 1] += 1;
+        for j in i..k {
+            idx[j] = idx[j - 1] + 1;
+        }
+    }
+    out
+}
 
 #[pyclass]
 struct GameEngine {
@@ -26,6 +48,30 @@ impl GameEngine {
             game: Game::new(config.unwrap_or_default()),
             recorder: None,
         }
+    }
+
+    /// (hand rank, score) for every 1-5 card pick of the hand. Missing cards give (255, 0).
+    fn score_subsets(&self) -> Vec<(u8, usize)> {
+        let cards = self.game.available.cards();
+        let mut out = Vec::with_capacity(218);
+        for k in 1..=5 {
+            for slots in combinations(8, k) {
+                if slots.iter().any(|&s| s >= cards.len()) {
+                    out.push((255, 0));
+                    continue;
+                }
+                let picked: Vec<Card> = slots.iter().map(|&s| cards[s]).collect();
+                match SelectHand::new(picked).best_hand() {
+                    Ok(made) => {
+                        let rank = made.rank as u8;
+                        let mut copy = self.game.clone();
+                        out.push((rank, copy.calc_score(made)));
+                    }
+                    Err(_) => out.push((255, 0)),
+                }
+            }
+        }
+        out
     }
 
     fn replay_header_line(&self) -> PyResult<String> {

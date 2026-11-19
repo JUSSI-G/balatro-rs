@@ -237,3 +237,42 @@ mod tests {
         assert_eq!(a, a, "a card must equal itself");
     }
 }
+
+// Expose card fields to Python as plain numbers.
+#[cfg(feature = "python")]
+#[pyo3::pymethods]
+impl Card {
+    #[getter]
+    fn rank(&self) -> u8 {
+        self.value as u8
+    }
+
+    #[getter]
+    fn suit(&self) -> u8 {
+        self.suit as u8
+    }
+
+    #[getter]
+    fn edition(&self) -> u8 {
+        self.edition as u8
+    }
+
+    #[getter]
+    fn enhancement(&self) -> Option<u8> {
+        self.enhancement.map(|e| e as u8)
+    }
+
+    #[getter]
+    fn seal(&self) -> Option<u8> {
+        self.seal.map(|s| s as u8)
+    }
+
+    #[getter]
+    fn id(&self) -> usize {
+        self.id
+    }
+
+    fn __repr__(&self) -> String {
+        format!("{}", self)
+    }
+}

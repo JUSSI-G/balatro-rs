@@ -127,6 +127,16 @@ impl Config {
     fn set_ante_end(&mut self, i: usize) {
         self.ante_end = i;
     }
+    
+    #[getter]
+    fn get_ante_start(&mut self) -> usize {
+        self.ante_start
+    }
+
+    #[setter]
+    fn set_ante_start(&mut self, i: usize) {
+        self.ante_start = i;
+    }
 
     #[getter]
     fn get_plays(&mut self) -> usize {

@@ -242,6 +242,11 @@ impl GameState {
     fn shop_voucher(&self) -> Option<Voucher> {
         self.game.shop.voucher
     }
+    /// Jokers for sale in the shop right now.
+    #[getter]
+    fn shop_jokers(&self) -> Vec<Jokers> {
+        self.game.shop.jokers.clone()
+    }
 
     #[getter]
     fn seed(&self) -> u64 {

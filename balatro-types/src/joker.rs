@@ -359,6 +359,10 @@ macro_rules! joker_data {
             pub fn desc(&self) -> &'static str {
                 match self { $(Self::$variant(_) => $desc,)* }
             }
+            /// Every joker id, in table order.
+            pub fn all_ids() -> Vec<&'static str> {
+                vec![$($id,)*]
+            }
             pub fn sell_value(&self) -> usize {
                 std::cmp::max(1, self.cost() / 2)
             }
@@ -569,5 +573,29 @@ mod tests {
     #[test]
     fn test_jokers_from_str_invalid() {
         assert!("NotARealJoker".parse::<Jokers>().is_err());
+    }
+}
+
+#[cfg(feature = "python")]
+#[pyo3::pymethods]
+impl Jokers {
+    #[getter(key)]
+    fn py_key(&self) -> &'static str {
+        self.id()
+    }
+
+    #[getter(cost)]
+    fn py_cost(&self) -> usize {
+        Jokers::cost(self)
+    }
+
+    #[getter(rarity)]
+    fn py_rarity(&self) -> u8 {
+        self.rarity() as u8
+    }
+
+    #[staticmethod]
+    fn all_keys() -> Vec<&'static str> {
+        Jokers::all_ids()
     }
 }

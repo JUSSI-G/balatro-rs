@@ -273,6 +273,7 @@ fn pylatro(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Config>()?;
     m.add_class::<GameEngine>()?;
     m.add_class::<GameState>()?;
+    m.add_class::<Jokers>()?;
     m.add_class::<Stage>()?;
     m.add_class::<Voucher>()?;
     m.add_function(wrap_pyfunction!(seed_from_str, m)?)?;
